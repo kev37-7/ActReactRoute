@@ -3,66 +3,60 @@ import Card from './Card'
 import './AlbumsList.css'
 
 const AlbumList = () => {
-  const [albums, setAlbums] = useState([]) // guarda los albumes obtenidos de la API
-  const [loading, setLoading] = useState(true) // controla si aun se estan cargando los datos
-  const [search, setSearch] = useState('') // texto ingresado en la barra de busqueda
+  const [albums, setAlbums] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    // funcion asincronica que se encarga de obtener los albumes de rock desde la API de iTunes
     const fetchAlbums = async () => {
       try {
-        // peticion HTTP a la API con el termino de busqueda "rock"
+        // busca releases etiquetados como "rock" en todas las regiones
         const response = await fetch(
-          'https://itunes.apple.com/search?term=rock&entity=album&limit=50'
+          'https://musicbrainz.org/ws/2/release?query=tag:rock&limit=50&fmt=json'
         )
-
         const data = await response.json()
-
-        // actualiza el estado con los albumes recibidos
-        setAlbums(data.results)
-      } catch (error) {
-        // muestra error si falla la peticion
-        console.error('error al cargar los álbumes', error)
+        setAlbums(data.releases || [])
+      } catch (err) {
+        console.error('error al cargar albumes', err)
       } finally {
-        // oculta el mensaje de "cargando"
         setLoading(false)
       }
     }
-
-    fetchAlbums() // ejecuta la funcion al montar el componente
+    fetchAlbums()
   }, [])
 
-  // filtra los albumes segun el texto ingresado
-  const filteredAlbums = albums.filter(album =>
-    album.collectionName.toLowerCase().includes(search.toLowerCase()) ||
-    album.artistName.toLowerCase().includes(search.toLowerCase())
+  const filtered = albums.filter(al =>
+    al.title.toLowerCase().includes(search.toLowerCase()) ||
+    (al['artist-credit'] && al['artist-credit'][0].name.toLowerCase().includes(search.toLowerCase()))
   )
 
   return (
     <div className="album-list">
       <h2>álbumes de rock</h2>
-
       <input
         type="text"
-        placeholder="buscar por nombre o artista"
+        placeholder="buscar por álbum o artista"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={e => setSearch(e.target.value)}
         className="search-input"
       />
-
       {loading ? (
         <p>cargando álbumes...</p>
       ) : (
         <div className="album-container">
-          {filteredAlbums.length > 0 ? (
-            filteredAlbums.map((album) => (
-              <Card
-                key={album.collectionId}
-                nombre={album.collectionName}
-                artista={album.artistName}
-                imagen={album.artworkUrl100}
-              />
-            ))
+          {filtered.length ? (
+            filtered.map((al, idx) => {
+              // intenta obtener imagen del Cover Art Archive
+              const coverUrl = `https://coverartarchive.org/release/${al.id}/front-250.jpg`
+              return (
+                <Card
+                  key={al.id}
+                  nombre={al.title}
+                  artista={al['artist-credit'][0].name}
+                  imagen={coverUrl}
+                />
+              )
+            })
           ) : (
             <p>no se encontraron álbumes</p>
           )}
