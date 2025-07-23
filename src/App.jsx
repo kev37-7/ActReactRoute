@@ -1,10 +1,11 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Album from './pages/Album';
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import Home from './pages/Home'
+import Album from './pages/Album'
 
-const App = () => {
+function App() {
   return (
     <>
       <Navbar />
@@ -12,7 +13,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/albumes" element={<Album />} />
       </Routes>
+      <Footer />
     </>
-  );
-};
-export default App;
+  )
+}
+
+export default App
